@@ -1,0 +1,52 @@
+#include <stdio.h>
+#include <asm/types.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
+#include <sys/socket.h>
+
+#define INIT_NETLINK_SOCK(x) \
+	memset((void *)&x, 0, sizeof x);	\
+	x.nl_family = AF_NETLINK;			\
+	x.nl_pid = 0;		\
+	x.RTMGRP_LINK | RTMGRP_IPV4_IFADDR;	\
+
+static int 
+open_netlink_socket(int *socket_netlink) {
+	int ret = 0;
+	if(((*socket_netlink) = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE)) < 0 ) {
+		fprintf(stderr, "socket() error => %m\n");
+		ret = -1;	
+	}
+	return ret;
+}
+
+static int 
+bind_netlink_socket(coinst int socket_netlink, struct sockaddr_nl *sock_addr) {
+	int ret = 0;
+	
+	if((ret = bind(socket_netlink,(struct sockaddr *)(*sock_addr), sizeof(struct sockaddr_nl))) < 0 ) {
+		fprintf(stderr, "connect() error =. %m\n");
+		ret = -1;
+	}
+	return ret;
+}
+
+int main() {
+	int socket_netlink = 0;
+	int ret = 0;
+	struct sockaddr_nl sock_addr;
+	
+	if((ret = open_netlink_socket(&socket_netlink)) <  0) {
+		goto cleanup;
+	}
+	fprintf(stdout, "Socket opened => %d\n", socket_netlink);
+	INIT_NETLINK_SOCK(sock_addr);
+	if((bind_netlink_socket(socket_netlink)) < 0) {
+		goto close_sock;
+	}
+	fprintf(stdout, "bind(%d) successfull\n", socket_netlink);
+close_sock:
+	close(socket_netlink);	
+cleanup:
+	return ret;
+}

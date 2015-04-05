@@ -1,0 +1,100 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<pthread.h>
+#include<errno.h>
+
+#define MAX 8
+
+int array[MAX];
+
+struct shared {
+	pthread_mutex_t mutex;
+	int nput;
+	int val;	
+}shared_variable = {
+ PTHREAD_MUTEX_INITIALIZER
+};
+
+struct condition {
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
+	int ready;
+}condition_variable = {
+PTHREAD_MUTEX_INITIALIZER,
+PTHERAD_COND_INITIALIZER
+};
+
+void
+producer(void *arg) {
+	while(1) {
+		pthread_mutex_lock(&shared_variable.mutex);
+		if(shared_variable.nput > MAX) {
+			pthread_mutex_unlock(&shared_variable.mutex);
+			return;
+		}
+		array[shared_variable.nput] = shared_variable.val;
+		shared_variable.nput++;
+		shared_variable.val++;
+		pthread_mutex_unlock(&shared_variable.mutex);
+
+		pthread_mutext_lock(&condition_variable.mutex);
+		if(condition_variable.ready == 0)
+			pthread_cond_signal(&condition_variable.cond);
+		condition_variable.ready++;
+		pthread_mutext_unlock(&condition_variable.mutex);
+	}
+}
+
+void
+consumer(void *arg) {
+	int i;
+	for(i = 0 ; i < MAX ; i++) {
+		pthread_mutex_lock(&condition_variable.mutex);
+		while(condition_variable.ready == 0) {
+			pthread_cond_wait(&condition_variable.cond, &condition_variable.mutex);				
+		}
+		condition_variable.ready--;
+		printf("Value of Array[%d] = %s",i,array[i]);
+		pthread_mutex_unlock(&condition_variable.mutex);
+	}
+}
+
+void
+thread_handling(int argc, char** argv) {
+	int nthreads, i;
+	pthread_t *producer_threads, consumer_therad;
+	
+	nthreads = atoi(argv[1]);
+	producer_threads = (pthread_t *)calloc(sizeof(pthread_t), nthreads);
+
+	set_concurrency(nthreads);
+	for(i = 0; i<nthreads; i++) {
+		if(pthread_create(&producer_threads[i], NULL, producer, NULL) != 0) {
+			fprintf(stderr, "Error in creating producer no %d  as %s", i+1, strerror(errno));
+			return;
+		}
+	}
+	for(i = 0 ; i<nthreads; i++) {
+		if(ptherad_join(&producer_threads[i], NULL) != 0) {
+			fprintf(stderr, "Error in joining producer no %d as %s", i+1, strerror(errno));
+			return;
+		}
+	}
+	if(pthread_create(consumer_thread, NULL, consumer, NULL) != 0) {
+		fprintf(stderr, "Error in creating producer no %d  as %s", i+1, strerror(errno));
+		return;
+	}
+	if(ptherad_join(&producer_threads[i], NULL) != 0) {
+		fprintf(stderr, "Error in joining producer no %d as %s", i+1, strerror(errno));
+		return;
+	}
+}
+
+
+int
+main(argc, argv) {
+	if(argc != 2)
+		return -1;
+	threads_handling(argc, argv);
+	return 0;
+}	

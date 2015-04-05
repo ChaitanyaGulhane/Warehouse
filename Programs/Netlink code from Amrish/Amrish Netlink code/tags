@@ -1,0 +1,52 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+NETLINK_PARSER	netlink_common.h	/^typedef int (NETLINK_PARSER) (struct nlmsghdr *nh, void *sub_object, int rtlen);$/;"	t
+NLMSG_TAIL	netlink_common.h	20;"	d
+ROUTE_ATTR_SIZE	netlink_common.h	23;"	d
+RTA_TABLE	route_status.c	16;"	d	file:
+__NETLINK_COMMON__	netlink_common.h	2;"	d
+_nl_route_req	netlink_common.h	/^struct _nl_route_req {$/;"	s
+add_rta_dst_attr	route_status.c	/^add_rta_dst_attr(struct _nl_route_req *req, const int siz, const char *ip)$/;"	f	file:
+display_dst	route_status.c	/^display_dst(struct rtmsg *rg, void *data)$/;"	f	file:
+display_gateway	route_status.c	/^display_gateway(void *data)$/;"	f	file:
+display_prefsrc	route_status.c	/^display_prefsrc(void *data)$/;"	f	file:
+display_raw	netlink_common.c	/^display_raw(const int len, uint8_t *ptr)$/;"	f
+display_route_info	route_status.c	/^display_route_info(void)$/;"	f	file:
+display_rtm_family	route_status.c	/^display_rtm_family(unsigned char family)$/;"	f	file:
+display_rtm_flags	route_status.c	/^display_rtm_flags(unsigned flags)$/;"	f	file:
+display_rtm_protocol	route_status.c	/^display_rtm_protocol(unsigned char proto)$/;"	f	file:
+display_rtm_scope	route_status.c	/^display_rtm_scope(unsigned char scop)$/;"	f	file:
+display_rtm_table	route_status.c	/^display_rtm_table(unsigned char tbl)$/;"	f	file:
+display_rtm_type	route_status.c	/^display_rtm_type(unsigned char type)$/;"	f	file:
+display_rtmsg	route_status.c	/^display_rtmsg(struct rtmsg *rg)$/;"	f	file:
+display_src	route_status.c	/^display_src(struct rtmsg *rg, void *data)$/;"	f	file:
+get_ip_route_info	route_status.c	/^get_ip_route_info(int argc, char **argv)$/;"	f	file:
+get_routing_info	route_status.c	/^get_routing_info(int fd)$/;"	f	file:
+handle_nlmsg_error	netlink_common.c	/^handle_nlmsg_error(struct nlmsgerr *err)$/;"	f	file:
+handle_route_attribute	route_status.c	/^handle_route_attribute(struct rtmsg *rg, struct rtattr *rt, void *data)$/;"	f	file:
+init_rtnetlink_socket	netlink_common.c	/^init_rtnetlink_socket(uint32_t group)$/;"	f
+is_valid_route_nh	route_status.c	/^is_valid_route_nh(struct nlmsghdr *nh)$/;"	f	file:
+log_critical	netlink_common.h	15;"	d
+log_debug	netlink_common.h	10;"	d
+log_error	netlink_common.h	11;"	d
+log_info	netlink_common.h	12;"	d
+log_info_append	netlink_common.h	17;"	d
+log_message	netlink_common.h	14;"	d
+log_notice	netlink_common.h	13;"	d
+log_temp	netlink_common.h	9;"	d
+main	route_status.c	/^main(int argc, char **argv)$/;"	f
+nh	netlink_common.h	/^    struct nlmsghdr  nh;$/;"	m	struct:_nl_route_req	typeref:struct:_nl_route_req::nlmsghdr
+parse_netlink_response	netlink_common.c	/^parse_netlink_response(const char *buf, uint32_t len, NETLINK_PARSER *netparser, int *hnd_ret)$/;"	f
+prepare_nl	netlink_common.c	/^prepare_nl(struct sockaddr_nl *nl, uint32_t group)$/;"	f	file:
+prepare_request	route_status.c	/^prepare_request(struct _nl_route_req *req)$/;"	f	file:
+print_nlmsg_header	netlink_common.c	/^print_nlmsg_header(struct nlmsghdr *msg)$/;"	f	file:
+receive_netlink_response	netlink_common.c	/^receive_netlink_response(char *buf, int len, int fd)$/;"	f
+route	netlink_common.h	/^    struct rtmsg     route;$/;"	m	struct:_nl_route_req	typeref:struct:_nl_route_req::rtmsg
+route_attr_hdlr	route_status.c	/^route_attr_hdlr(struct nlmsghdr *nh, void *subobj, int rtlen)$/;"	f	file:
+rt_attr	netlink_common.h	/^    char 	     rt_attr[ROUTE_ATTR_SIZE];$/;"	m	struct:_nl_route_req
+send_netlink_msg	netlink_common.c	/^send_netlink_msg(int fd, void *req)$/;"	f
+send_route_get_request	route_status.c	/^send_route_get_request(int fd)$/;"	f	file:

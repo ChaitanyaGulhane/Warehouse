@@ -1,0 +1,181 @@
+#include<stdio.h>
+#include<sys/types.h>
+#include<sys/socket.h>
+#include<netinet/in.h>
+#include<string.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <arpa/inet.h> 
+#include<errno.h>
+#include<signal.h>
+#include<sys/epoll.h>
+
+#define SERV_PORT 3000
+#define MAX_EVENTS 256
+#define MAXLEN 1024
+#define LISTENQ 5
+
+#define INIT_SOCK(sock, port)\
+memset(&sock, 0, sizeof(sock));\
+sock.sin_family = AF_INET;\
+sock.sin_addr.s_addr = htonl(INADDR_ANY);\
+sock.sin_port = htons(port)\
+
+
+static int exit_global;
+
+static void interruptHandeler(int signal)
+{
+	exit_global = 1;
+}
+
+int
+do_polling(int sockfd_tcp, int sockfd_udp)
+{
+	char buffer[1024];
+	struct sockaddr_in client_sock_tcp, client_sock_udp;
+	int recv_len, connfd, maxfd;
+	socklen_t len;
+	fd_set set;
+
+	while(1)
+	{
+		FD_ZERO(&set);
+		FD_SET(sockfd_tcp, &set);
+		FD_SET(sockfd_udp, &set);
+		maxfd = max(sockfd_tcp, sockfd_udp)  +  1;
+		select(maxfd, &set, NULL, NULL, NULL);
+
+		if(exit_global)
+		{
+			close(sockfd_tcp);
+			close(sockfd_udp);
+			return 0;
+		}
+
+		if(FD_ISSET(sockfd_tcp, &set))
+		{
+			printf("\n\n\n\n TCP Socket selected");
+			len = sizeof(client_sock_tcp);
+			recv_len = 0;
+			bzero(&client_sock_tcp, sizeof(client_sock_tcp));
+			if((connfd = accept(sockfd_tcp, (struct sockaddr *)&client_sock_tcp, &len)) == -1)
+			{
+				fprintf(stderr, "accept() tcp error  => %s", strerror(errno));
+				close(sockfd_tcp);
+				close(sockfd_udp);
+				return -1;
+			}
+
+			while((recv_len = read(connfd, buffer, sizeof(buffer))) > 0) 
+			{
+				printf("\n%d bytes received --- TCP \n",recv_len);
+				buffer[recv_len] = '\0';
+				printf("%s", buffer);
+				recv_len = write(connfd, buffer, strlen(buffer));
+				printf("\n%d bytes sent ---- TCP \n\n", recv_len);
+			}
+			close(connfd);
+		
+		}
+
+		if(FD_ISSET(sockfd_udp, &set))
+		{
+			printf("\n\n\n\nUDP Socket selected");
+			len = sizeof(client_sock_udp);
+			recv_len = 0;
+			bzero(&client_sock_udp, sizeof(client_sock_udp));
+			recv_len = recvfrom(sockfd_udp, buffer, MAXLEN, 0, (struct sockaddr *)&client_sock_udp, &len);
+			printf("\n %d bytes received ---- UDP\n", recv_len);
+			buffer[recv_len] = 0;
+			printf(" %s", buffer);
+			recv_len = sendto(sockfd_udp, buffer, strlen(buffer), 0, (struct sockaddr *)&client_sock_udp, len);
+			printf("\n %d bytes sent ------ UDP\n", recv_len);
+		}
+	}
+
+	close(sockfd_tcp);
+	close(sockfd_udp);
+
+	return 0;
+}
+
+int
+main(void)
+{
+
+	
+	int sockfd;
+	struct sockaddr_in server_sock;
+
+	signal(SIGINT, interruptHandeler);
+	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+		fprintf(stderr, "socket() error  => %s", strerror(errno));
+		return -1;
+	}
+	INIT_SOCK(server_sock, SERV_PORT);
+
+	if(bind(sockfd, (struct sockaddr *)&server_sock, sizeof(server_sock)) == -1 ) {
+		fprintf(stderr, "bind(%d) failed %s", sockfd, strerror(errno));
+		close(sockfd);
+		return -1;
+	}
+	if(listen(sockfd, LISTENQ) < 0) {
+		fprintf(stderr, "connect() tcp error  => %s", strerror(errno));
+		close(sockfd);
+		return -1;
+	}
+
+	struct epoll_event event, events[MAX_EVENTS];
+	int epollfd, nfd;
+
+	if((epollfd = epoll_create(10)) < 0) {
+		fprintf(stderr, "epoll_create() error => %s", strerror(errno));
+		close(sockfd);
+		return -1;
+	}
+	
+	event.event = EPOLLIN | EPOLLET;
+	event.data.fd = sockfd;
+	
+	if(epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &event) < 0) {
+		fprintf(stderr, "epoll_ctl() error => %s", strerror(errno));
+		close(sockfd);
+		return -1;
+	}
+	
+	while(1) {
+		if((nfd = epoll_wait(epollfd, events, MAX_EVENTS, -1)) < 0) {
+			fprintf(stderr, "epoll_wait() error => %s", strerror(errno));
+			close(sockfd);
+			return -1;
+		}
+		for(i = 0; i < nfd; i++) {
+			if(events[i].data.fd == sockfd) {
+				len = sizeof(client_sock);
+				if((connfd = accept(sockfd, (struct sockaddr *)&client_sock, &len)) == -1) {
+					fprintf(stderr, "epoll_ctl() error => %s", strerror(errno));
+					close(sockfd);
+					return -1;
+				}
+				event.event = EPOLLIN | EPOLLET;
+				event.data.fd = connfd;
+				if(epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &event) < 0) {
+					fprintf(stderr, "epoll_ctl() error => %s", strerror(errno));
+					close(sockfd);
+					return -1;
+				}
+				while((recv_len = read(connfd, buffer, sizeof(buffer))) > 0) 
+					printf("\n%d bytes received --- TCP \n",recv_len);
+					buffer[recv_len] = '\0';
+					printf("%s", buffer);
+					recv_len = write(connfd, buffer, strlen(buffer));
+				}
+			}
+		}
+	}
+	
+	return 0;
+}

@@ -1,0 +1,25 @@
+/*
+
+server code
+
+*/
+
+
+#include "sock_header.h"
+
+int main()
+{
+	int sockfd;
+	struct sockaddr_in server_sock, client_sock;
+
+	sockfd = Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	printf("\n\nsockfd = %d\n\n", sockfd);
+
+	bzero(&server_sock, sizeof(server_sock));
+	server_sock.sin_family = AF_INET;
+	server_sock.sin_addr = htonl(IN_ADDR_ANY);
+	server_sock.sin_port = htons(SERV_PORT);
+
+	Bind(sockfd, (struct sockaddr *)& server_sock, sizeof(server_sock));
+
+}
